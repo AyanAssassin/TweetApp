@@ -6,13 +6,17 @@ import com.tweetapp.dao.UserLoginCredentialDao;
 import java.util.List;
 
 public interface TweetService {
-    public Boolean validateUser(String userId,String password);
+    public String validateUser(String userId,String password);
 
-    public String changePassword(String userId,String newPassword);
+    public Boolean logoutUser(String userId);
 
-    public UserLoginCredentialDao registerUser();
+    public Boolean changePassword(String userId,String newPassword);
+
+    public UserLoginCredentialDao registerUser(String userId,String userName,String password);
 
     public List<TweetDetailsDao> getAllTweetsByUserId(String userId);
+
+    public Boolean postTweetByUserId(String tweet,String userId);
 
     public List<UserLoginCredentialDao> getAllUsers();
 

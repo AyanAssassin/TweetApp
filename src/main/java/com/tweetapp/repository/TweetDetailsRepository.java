@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface TweetDetailsRepository extends JpaRepository<TweetDetailsDao, Integer> {
-    List<TweetDetailsDao> findByUserId(Integer userId);
+    List<TweetDetailsDao> findByUserId(String userId);
 }
