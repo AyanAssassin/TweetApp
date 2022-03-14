@@ -22,7 +22,7 @@ import java.util.*;
 @SpringBootApplication
 public class TweetappApplication implements CommandLineRunner {
 
-    private static Logger LOG = LoggerFactory
+    private static Logger LOGGER = LoggerFactory
             .getLogger(TweetappApplication.class);
     private final TweetService tweetService;
 
@@ -36,13 +36,14 @@ public class TweetappApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        LOG.info("EXECUTING : command line runner");
+        LOGGER.info("EXECUTING : command line runner");
         try {
+            //System.out.println(new ClassPathResource("").getFile().getAbsolutePath());
             showMainMenu();
         }
         catch (Exception ex){
             ex.printStackTrace();
-            LOG.info(ex.getMessage());
+            LOGGER.info(ex.getMessage());
         }
     }
 
@@ -102,22 +103,22 @@ public class TweetappApplication implements CommandLineRunner {
 
     private void runJavaScript(String userId,String oldPass,String newPass,String confirmPass) throws ScriptException, NoSuchMethodException, IOException {
         ScriptEngineManager manager = new ScriptEngineManager();
-        ScriptEngine engine = manager.getEngineByName("nashorn");;
+        ScriptEngine engine = manager.getEngineByName("nashorn");
         if (!(engine instanceof Invocable)) {
             System.out.println("Invoking methods is not supported.");
             return;
         }
         Invocable inv = (Invocable) engine;
-        File resource = new ClassPathResource("scripts/rest_password.js").getFile();
-        String scriptPath = "classpath:scripts/rest_password.js";
+        //File resource = new ClassPathResource("C:\Users\ishan\Documents\TweetApp\target\classes\scripts\reset_password.js").getFile();
+        String scriptPath = "C:/Users/ishan/Documents/TweetApp/target/classes/scripts/reset_password.js";
 
-        //engine.eval("load('" + scriptPath + "')");
-        engine.eval(resource.toString());
+        engine.eval("load('" + "src\\main\\resources\\scripts\\reset_password.js" + "')");
+        //engine.eval(resource.toString());
 
         Object handler = engine.get("handler");
 
         Object addResult = inv.invokeMethod(handler, "reset", oldPass, newPass,confirmPass);
-        if (addResult instanceof Boolean && (Boolean)addResult){
+        if (addResult instanceof Boolean && Boolean.TRUE.equals(addResult)){
             tweetService.changePassword(userId, newPass);
             System.out.println("Password successfully reset");
 
@@ -148,7 +149,7 @@ public class TweetappApplication implements CommandLineRunner {
                 case '1':
                     System.out.println("\tEnter tweet:");
                     tweet = sc.nextLine();
-                    if (tweetService.postTweetByUserId(tweet, userId)) {
+                    if (Boolean.TRUE.equals(tweetService.postTweetByUserId(tweet, userId))) {
                         System.out.println("Tweet created successfully");
                     } else {
                         System.out.println("Cannot create tweet");
@@ -192,7 +193,7 @@ public class TweetappApplication implements CommandLineRunner {
                     runJavaScript(userId,oldPass,newPass,confirmPass);
                     break;
                 case '6':
-                    if (tweetService.logoutUser(userId)) {
+                    if (Boolean.TRUE.equals(tweetService.logoutUser(userId))) {
                         System.out.println("User " + userId + "successfully logged out");
                     }
                     System.out.println("Cannot logout user with userId : " + userId);
