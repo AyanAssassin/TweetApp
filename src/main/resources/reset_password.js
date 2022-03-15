@@ -4,15 +4,15 @@ handler.reset = resetPassword;
 
 function resetPassword(oldPassword,newPassword,confirmPassword) {
     if (oldPassword == "" || newPassword == "" || confirmPassword == "") {
-        alert('Please fill all the details');
+        console.log('Please fill all the details');
         return false;
     }
     else if (oldPassword == newPassword) {
-        alert("Old password and New Password cannot be same");
+        console.log("Old password and New Password cannot be same");
         return false;
     }
     else if (newPassword != confirmPassword) {
-        alert("password mismatch");
+        console.log("password mismatch");
         return false;
     }
     return true;

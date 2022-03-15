@@ -5,22 +5,28 @@ import com.tweetapp.dao.UserLoginCredentialDao;
 import com.tweetapp.service.TweetService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.util.CollectionUtils;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.io.File;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.util.*;
 
 @SpringBootApplication
 public class TweetappApplication implements CommandLineRunner {
+    @Value("classpath:scripts/reset_password.js")
+    private Resource resource1;
 
     private static Logger LOG = LoggerFactory
             .getLogger(TweetappApplication.class);
@@ -38,7 +44,8 @@ public class TweetappApplication implements CommandLineRunner {
     public void run(String... args) {
         LOG.info("EXECUTING : command line runner");
         try {
-            showMainMenu();
+            //showMainMenu();
+            runJavaScript(null,null,null,null);
         }
         catch (Exception ex){
             ex.printStackTrace();
@@ -46,13 +53,13 @@ public class TweetappApplication implements CommandLineRunner {
         }
     }
 
-    public void showMainMenu() throws IOException, ScriptException, NoSuchMethodException {
+    public void showMainMenu() throws IOException, ScriptException, NoSuchMethodException, URISyntaxException {
         String password;
         String userName;
         String userId;
         Scanner sc = new Scanner(System.in);
         //BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        Set<Character> operations = new HashSet<>(Arrays.asList('1', '2', '3'));
+        Set<Character> operations = new HashSet<>(Arrays.asList('1', '2', '3','\n','\t'));
         while (true) {
             userId=userName=password="";
             System.out.println("\ti. Register\t\n" +
@@ -60,7 +67,7 @@ public class TweetappApplication implements CommandLineRunner {
                     "\tiii.Forgot Password\t\n");
             //Character s = (char) br.read();
             Character s = sc.nextLine().charAt(0);
-            System.out.println(s);
+            System.out.println("\tYou have entered  :" +s);
             if (!operations.contains(s)) {
                 break;
             }
@@ -88,9 +95,9 @@ public class TweetappApplication implements CommandLineRunner {
                 case '3':
                     System.out.println("\tEnter email ID:");
                     userId = sc.nextLine();
-                    System.out.println("\tEnter new password:");
-                    password = sc.nextLine();
-                    tweetService.changePassword(userId, password);
+                    System.out.println("\tEnter userName:");
+                    userName = sc.nextLine();
+                    tweetService.forgotPassword(userId,userName);
                     break;
                 default:
                     System.out.println("Please enter valid input");
@@ -100,37 +107,68 @@ public class TweetappApplication implements CommandLineRunner {
         }
     }
 
-    private void runJavaScript(String userId,String oldPass,String newPass,String confirmPass) throws ScriptException, NoSuchMethodException, IOException {
+    private String readFromInputStream(InputStream inputStream)
+            throws IOException {
+        StringBuilder resultStringBuilder = new StringBuilder();
+        try (BufferedReader br
+                     = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                resultStringBuilder.append(line).append("\n");
+            }
+        }
+        return resultStringBuilder.toString();
+    }
+
+    private void runJavaScript(String userId,String oldPass,String newPass,String confirmPass) throws ScriptException, NoSuchMethodException, IOException, URISyntaxException {
         ScriptEngineManager manager = new ScriptEngineManager();
-        ScriptEngine engine = manager.getEngineByName("nashorn");;
+        ScriptEngine engine = manager.getEngineByName("JavaScript");;
         if (!(engine instanceof Invocable)) {
             System.out.println("Invoking methods is not supported.");
             return;
         }
         Invocable inv = (Invocable) engine;
-        File resource = new ClassPathResource("scripts/rest_password.js").getFile();
-        String scriptPath = "classpath:scripts/rest_password.js";
+        //ClassLoader classLoader = getClass().getClassLoader();
+        //File f=ResourceUtils.getFile("src/main/resources/file.txt");
+        //InputStream inputStream = classLoader.getResourceAsStream("file.txt");
+        //String data = readFromInputStream(inputStream);
+        //System.out.println(System.getProperty("java.class.path"));
+        //System.out.println(new String(Files.readAllBytes(Paths.get(resource1.getURI()))));
+        //URL fileURL=getClass().getResource("/reset_password.js");
+        //System.out.println(fileURL.getPath());
+        //File resource = new ClassPathResource("//reset_password.js").getFile();
+        //System.out.println(new String(Files.readAllBytes(Paths.get(resource.getAbsolutePath()))));
+        String scriptPath = "classpath:scripts//reset_password.js";
 
-        //engine.eval("load('" + scriptPath + "')");
-        engine.eval(resource.toString());
+        //engine.eval(Files.newBufferedReader(Paths.get("reset_password.js"), StandardCharsets.UTF_8));
+        //engine.eval("load('" + Paths.get(resource1.getURI()).toString() + "')");
+        //engine.eval("load('" + resource.getPath() + "')");
+        engine.put("out", System.out);
+        engine.eval("load('" + scriptPath + "')");
+
+        //engine.eval(resource.toString());
+        //URL fileUrl = getClass().getResource("scripts\\reset_password.js");
+        //engine.eval(Files.newBufferedReader(Paths.get(fileURL.toURI()), StandardCharsets.UTF_8));
+        //engine.eval(resource1.getFile());
+        //engine.eval(new String(Files.readAllBytes(Paths.get(resource1.getURI()))));
 
         Object handler = engine.get("handler");
 
         Object addResult = inv.invokeMethod(handler, "reset", oldPass, newPass,confirmPass);
         if (addResult instanceof Boolean && (Boolean)addResult){
-            tweetService.changePassword(userId, newPass);
+            tweetService.changePassword(userId,oldPass, newPass);
             System.out.println("Password successfully reset");
-
+            return;
         }
         System.out.println("Cannot reset password");
     }
 
-    public void showTweetMenu(String userId) throws IOException, ScriptException, NoSuchMethodException {
+    public void showTweetMenu(String userId) throws IOException, ScriptException, NoSuchMethodException, URISyntaxException {
         String tweet;
 
         Scanner sc = new Scanner(System.in);
         //BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        Set<Character> operations = new HashSet<>(Arrays.asList('1', '2', '3', '4', '5', '6'));
+        Set<Character> operations = new HashSet<>(Arrays.asList('1', '2', '3', '4', '5', '6','\n','\t'));
         while (true) {
             tweet="";
             System.out.println("\ti. Post a tweet\n" +

@@ -10,7 +10,9 @@ public interface TweetService {
 
     public Boolean logoutUser(String userId);
 
-    public Boolean changePassword(String userId,String newPassword);
+    public Boolean changePassword(String userId,String oldPassword,String newPassword);
+
+    public Boolean forgotPassword(String userId,String userName);
 
     public UserLoginCredentialDao registerUser(String userId,String userName,String password);
 

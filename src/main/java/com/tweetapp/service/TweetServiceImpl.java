@@ -57,18 +57,42 @@ public class TweetServiceImpl implements TweetService {
     }
 
     @Override
-    public Boolean changePassword(String userId, String newPassword) {
+    public Boolean changePassword(String userId, String oldPassword,String newPassword) {
         if (null != userId && null != newPassword) {
             Optional<UserLoginCredentialDao> credentialDao = userLoginCredentialsRepository.findById(userId);
             if (credentialDao.isPresent()) {
-                credentialDao.get().setPassword(newPassword);
-                userLoginCredentialsRepository.save(credentialDao.get());
-                System.out.println("\tPassword successfully changed");
-                return true;
+                if (credentialDao.get().getPassword().equals(oldPassword)) {
+                    credentialDao.get().setPassword(newPassword);
+                    userLoginCredentialsRepository.save(credentialDao.get());
+                    System.out.println("\tPassword successfully changed");
+                    return true;
+                } else {
+                    System.out.println("\tInvalid password");
+                }
+
             }
 
         }
         System.out.println("\tPassword cannot be reset");
+        return false;
+    }
+
+
+    @Override
+    public Boolean forgotPassword(String userId,String userName) {
+        if (null != userId && null != userName) {
+            Optional<UserLoginCredentialDao> credentialDao = userLoginCredentialsRepository.findById(userId);
+            if (credentialDao.isPresent()) {
+                if (credentialDao.get().getUserName().equals(userName)) {
+                    System.out.println(credentialDao.get().getPassword());
+                    return true;
+                } else {
+                    System.out.println("Invalid userName");
+                }
+            } else {
+                System.out.println("Invalid user ID");
+            }
+        }
         return false;
     }
 
