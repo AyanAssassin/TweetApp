@@ -2,6 +2,8 @@ package com.tweetapp.service;
 
 import com.tweetapp.dao.TweetDetailsDao;
 import com.tweetapp.dao.UserLoginCredentialDao;
+import com.tweetapp.exception.InputValidationException;
+import com.tweetapp.exception.InvalidCredentialsException;
 import com.tweetapp.repository.TweetDetailsRepository;
 import com.tweetapp.repository.UserLoginCredentialsRepository;
 import org.springframework.stereotype.Service;
@@ -33,10 +35,10 @@ public class TweetServiceImpl implements TweetService {
                 if (credentialDao.get().getPassword().equals(password)) {
                     return credentialDao.get().getUserName();
                 } else {
-                    System.out.println("Invalid password");
+                    throw new InvalidCredentialsException("Invalid password");
                 }
             } else {
-                System.out.println("Invalid userName");
+                throw new InvalidCredentialsException("Invalid userName");
             }
         }
         return null;
@@ -68,12 +70,12 @@ public class TweetServiceImpl implements TweetService {
                     return true;
                 } else {
                     System.out.println("\tInvalid password");
+                    throw new InvalidCredentialsException("Invalid password");
                 }
 
             }
 
         }
-        System.out.println("\tPassword cannot be reset");
         return false;
     }
 
@@ -87,10 +89,10 @@ public class TweetServiceImpl implements TweetService {
                     System.out.println(credentialDao.get().getPassword());
                     return true;
                 } else {
-                    System.out.println("Invalid userName");
+                    throw new InvalidCredentialsException("Invalid userName");
                 }
             } else {
-                System.out.println("Invalid user ID");
+                throw new InvalidCredentialsException("Invalid user ID");
             }
         }
         return false;
@@ -126,7 +128,7 @@ public class TweetServiceImpl implements TweetService {
             return true;
         } else {
             System.out.println("\tGiven email id is not valid");
-            return false;
+            throw new InputValidationException("Given email id is not valid");
         }
     }
 
